@@ -22,10 +22,26 @@ func main() {
 				createApp, err := golive.CreateApp(appName)
 
 				if err != nil {
+					return err
+				} else {
 					fmt.Printf("Created app with name %s", createApp.Name)
 					return nil
-				} else {
+				}
+			},
+		},
+		{
+			Name: "deploy",
+			Aliases: []string{"d"},
+			Action: func(c *cli.Context) error {
+				fmt.Println("Enter app name:")
+				appName, _ := reader.ReadString('\n')
+				createApp, err := golive.CreateApp(appName)
+
+				if err != nil {
 					return err
+				} else {
+					fmt.Printf("Created app with name %s", createApp.Name)
+					return nil
 				}
 			},
 		},

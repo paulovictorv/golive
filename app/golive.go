@@ -6,6 +6,7 @@ import (
 	"os"
 	"log"
 	"errors"
+	"github.com/paulovictorv/golive/app/infrastructure"
 )
 
 type Env struct {
@@ -43,9 +44,13 @@ func CreateApp(appName string) (App, error) {
 		},
 	}
 
+	for _, e := range app.Envs {
+		infrastructure.CreateEnv(e.Bucket)
+	}
+
 	_, e := saveFile(&app)
 
-	if (e != nil) {
+	if e != nil {
 		return App{}, e
 	} else {
 		return app, nil
