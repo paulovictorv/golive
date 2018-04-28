@@ -17,7 +17,7 @@ type Env struct {
 
 type App struct {
 	Name string `yaml:"name"`
-	Envs []Env `yaml:"envs"`
+	Envs []*Env `yaml:"envs"`
 }
 
 
@@ -30,7 +30,7 @@ func check(err error) {
 func CreateApp(appName string) (App, error) {
 	app := App{
 		Name: appName,
-		Envs: []Env{
+		Envs: []*Env{
 			{
 				Name:   "staging",
 				Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, "staging"),
@@ -45,7 +45,7 @@ func CreateApp(appName string) (App, error) {
 	}
 
 	for _, e := range app.Envs {
-		infrastructure.CreateEnv(e.Bucket)
+		e.CdnId  = infrastructure.CreateEnv(e.Bucket)
 	}
 
 	_, e := saveFile(&app)
