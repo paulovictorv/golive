@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"time"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"path/filepath"
+	"os"
+	"strings"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 var sess, _ = session.NewSession(&aws.Config{
@@ -21,6 +25,43 @@ func CreateEnv(bucketName string) string {
 	createBucket(bucketName)
 	cdnId := createCdn(bucketName)
 	return cdnId
+}
+
+type UploadIterator struct {
+	bucket string
+	files []file
+	error error
+}
+
+type file struct {
+	key string
+	path string
+}
+
+func (iter *UploadIterator) Next() bool {
+	return len(iter.files) > 0
+}
+
+func (iter *UploadIterator) Err() error {
+	return iter.error
+}
+
+func (iter *UploadIterator) UploadObject() s3manager.BatchUploadObject {
+
+}
+
+func UploadDir(rootPath string, bucketName string) {
+	files := []file{}
+
+	filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		key := strings.TrimPrefix(rootPath, path)
+
+		if !strings.HasPrefix(key, ".") && !(info.IsDir()) {
+			files = append(files, file{key, path})
+		}
+
+		return nil
+	})
 }
 
 func createBucket(bucketName string) {
