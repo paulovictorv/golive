@@ -27,41 +27,44 @@ func CreateEnv(bucketName string) string {
 	return cdnId
 }
 
-type UploadIterator struct {
-	bucket string
-	files []file
-	error error
-}
-
-type file struct {
-	key string
-	path string
-}
-
-func (iter *UploadIterator) Next() bool {
-	return len(iter.files) > 0
-}
-
-func (iter *UploadIterator) Err() error {
-	return iter.error
-}
-
-func (iter *UploadIterator) UploadObject() s3manager.BatchUploadObject {
-
-}
-
 func UploadDir(rootPath string, bucketName string) {
-	files := []file{}
+	var files []s3manager.BatchUploadObject
 
 	filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
-		key := strings.TrimPrefix(rootPath, path)
+		key := strings.TrimPrefix(path, rootPath)
 
-		if !strings.HasPrefix(key, ".") && !(info.IsDir()) {
-			files = append(files, file{key, path})
+		if !strings.HasPrefix(key, ".") && !info.IsDir() {
+			body, err := os.Open(path)
+
+			if err != nil {
+
+			}
+
+			uploadObject := s3manager.BatchUploadObject{
+				Object: &s3manager.UploadInput{
+					Bucket: aws.String(bucketName),
+					Key:    aws.String(key),
+					Body:   body,
+				},
+				After: func() error {
+					fmt.Printf("%s uploaded\n", key)
+					return nil
+				},
+			}
+
+			files = append(files, uploadObject)
 		}
 
 		return nil
 	})
+
+	uploader := s3manager.NewUploader(sess)
+
+	iterator := s3manager.UploadObjectsIterator{
+		Objects: files,
+	}
+
+	uploader.UploadWithIterator(aws.BackgroundContext(), &iterator)
 }
 
 func createBucket(bucketName string) {
