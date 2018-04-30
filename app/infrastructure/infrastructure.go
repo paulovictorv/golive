@@ -21,12 +21,6 @@ Region: aws.String("us-west-2")})
 var s3Client = s3.New(sess)
 var front = cloudfront.New(sess)
 
-func CreateEnv(bucketName string) string {
-	createBucket(bucketName)
-	cdnId := createCdn(bucketName)
-	return cdnId
-}
-
 func UploadDir(rootPath string, bucketName string) {
 	var files []s3manager.BatchUploadObject
 
@@ -65,6 +59,33 @@ func UploadDir(rootPath string, bucketName string) {
 	}
 
 	uploader.UploadWithIterator(aws.BackgroundContext(), &iterator)
+}
+
+func InvalidateFiles(id string, files []*string) (string, error) {
+	itoa := strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond), 10);
+
+	output, e := front.CreateInvalidation(&cloudfront.CreateInvalidationInput{
+		DistributionId: aws.String(id),
+		InvalidationBatch: &cloudfront.InvalidationBatch{
+			CallerReference: &itoa,
+			Paths: &cloudfront.Paths{
+				Quantity: aws.Int64(int64(len(files))),
+				Items:    files,
+			},
+		},
+	})
+
+	if e != nil {
+		return "", e
+	}
+
+	return *output.Invalidation.Id, nil
+}
+
+func CreateEnv(bucketName string) string {
+	createBucket(bucketName)
+	cdnId := createCdn(bucketName)
+	return cdnId
 }
 
 func createBucket(bucketName string) {
