@@ -15,37 +15,28 @@ func main() {
 	app := cli.NewApp()
 	reader := bufio.NewReader(os.Stdin)
 
-	qs := []*survey.Question{
-		{
-			Name: "name",
-			Prompt: &survey.Input{Message:"What's the name of your app?"},
-			Validate: survey.Required,
-		},
-	}
-
-
-
-
 	app.Commands = []cli.Command{
 		{
 			Name: "generate",
 			Aliases: []string{"g"},
 			Action: func(c *cli.Context) error {
-				tm.Println("Ok! Let's get it started, shall we?")
-				tm.Print("This line should disappear")
-				tm.ResetLine("Lol")
+				tm.Println(tm.Bold("Ok! Let's get it started, shall we?"))
+				tm.Flush()
 
-				i := &golive.App{}
-				err := survey.Ask(qs, i)
+				appName := ""
+				survey.AskOne(&survey.Input{Message:"What's the name of your app?"}, &appName, survey.Required)
 
-				if err != nil {
-					fmt.Println(err.Error())
-				} else {
-					if changeEnv() {
-						fmt.Println(getEnvs())
-					}
+				envs := []string {"production", "staging"}
 
+				if askChangeEnvs() {
+					envs = askNewEnvs()
 				}
+
+				initEnvs := golive.CreateEnvs(envs)
+
+				askDomainNames(initEnvs)
+
+
 				return nil
 			},
 		},
@@ -70,7 +61,20 @@ func main() {
 	app.Run(os.Args)
 }
 
-func changeEnv() bool {
+func askDomainNames(envs []*golive.Env) {
+	tm.Println(tm.Bold("Now, for each environment you will need to provide a domain name."))
+	tm.Flush()
+
+	for _, env := range envs {
+		domainName := ""
+		survey.AskOne(&survey.Input{
+			Message: fmt.Sprintf("Specify domain name for %s environment", env.Name),
+		}, &domainName, nil)
+		env.Domain = domainName
+	}
+}
+
+func askChangeEnvs() bool {
 	changeDefEnvQ := &survey.Confirm{
 		Message: "By default, GoLive creates two environments for you: staging & production. Do you want to change that?",
 	}
@@ -80,7 +84,7 @@ func changeEnv() bool {
 	return changeEnv
 }
 
-func getEnvs() []string {
+func askNewEnvs() []string {
 	commaString := "staging,production"
 	survey.AskOne(&survey.Input{
 		Message: "Type a list of environments (comma separated) that you wish to create",

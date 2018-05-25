@@ -11,6 +11,7 @@ import (
 
 type Env struct {
 	Name   string `yaml:"name"`
+	Domain string `yaml:"domain"`
 	CdnId  string `yaml:"cdnId"`
 	Bucket string `yaml:"bucket"`
 }
@@ -25,6 +26,14 @@ func check(err error) {
 	if (err != nil) {
 		log.Fatalf("error: %v", err)
 	}
+}
+
+func CreateEnvs(envsNames []string) []*Env {
+	var envs []*Env
+	for _, envName := range envsNames {
+		envs = append(envs, &Env{Name: envName})
+	}
+	return envs
 }
 
 func CreateApp(appName string) (App, error) {
