@@ -70,8 +70,10 @@ func askInvalidationPaths() []string {
 }
 
 func askDomainNames(envs []*golive.Env) {
-	tm.Println(tm.Bold("Now, for each environment you will need to provide a domain name."))
+	tm.Println(tm.Bold(tm.Color("Almost there!", tm.BLUE)))
+	tm.Print(tm.Bold("Now, for each environment you will need to provide a domain name."))
 	tm.Flush()
+
 
 	for _, env := range envs {
 		domainName := ""
