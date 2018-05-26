@@ -1,12 +1,10 @@
 package golive
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v2"
 	"os"
 	"log"
 	"errors"
-	"github.com/paulovictorv/golive/app/infrastructure"
 )
 
 type Env struct {
@@ -19,11 +17,11 @@ type Env struct {
 type App struct {
 	Name string `yaml:"name"`
 	Envs []*Env `yaml:"envs"`
+	InvalidationPaths []string `yaml:"invalidationPaths"`
 }
 
-
 func check(err error) {
-	if (err != nil) {
+	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 }
@@ -36,26 +34,10 @@ func CreateEnvs(envsNames []string) []*Env {
 	return envs
 }
 
-func CreateApp(appName string) (App, error) {
-	app := App{
-		Name: appName,
-		Envs: []*Env{
-			{
-				Name:   "staging",
-				Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, "staging"),
-				CdnId:  "aa",
-			},
-			{
-				Name:   "production",
-				Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, "production"),
-				CdnId:  "aa",
-			},
-		},
-	}
-
-	for _, e := range app.Envs {
-		e.CdnId  = infrastructure.CreateEnv(e.Bucket)
-	}
+func CreateApp(app App) (App, error) {
+	//for _, e := range app.Envs {
+	//	e.CdnId  = infrastructure.CreateEnv(e.Bucket)
+	//}
 
 	_, e := saveFile(&app)
 
@@ -72,14 +54,14 @@ func saveFile(app *App) (int, error) {
 	check(err)
 
 	file, e := os.Create(".golive.yml")
-	check(e);
+	check(e)
 
-	defer file.Close();
+	defer file.Close()
 
 	n, e := file.Write(out)
 
 	if n > 0 {
-		return n, nil;
+		return n, nil
 	} else {
 		return -1, errors.New("error while creating app")
 	}

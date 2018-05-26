@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/urfave/cli"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -13,7 +12,6 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	reader := bufio.NewReader(os.Stdin)
 
 	app.Commands = []cli.Command{
 		{
@@ -35,7 +33,15 @@ func main() {
 				initEnvs := golive.CreateEnvs(envs)
 
 				askDomainNames(initEnvs)
+				paths := askInvalidationPaths()
 
+				goliveApp := golive.App{
+					Name:              appName,
+					InvalidationPaths: paths,
+					Envs:              initEnvs,
+				}
+
+				golive.CreateApp(goliveApp)
 
 				return nil
 			},
@@ -44,21 +50,23 @@ func main() {
 			Name: "deploy",
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
-				fmt.Println("Enter app name:")
-				appName, _ := reader.ReadString('\n')
-				createApp, err := golive.CreateApp(appName)
-
-				if err != nil {
-					return err
-				} else {
-					fmt.Printf("Created app with name %s", createApp.Name)
-					return nil
-				}
+				return nil
 			},
 		},
 	}
 
 	app.Run(os.Args)
+}
+
+func askInvalidationPaths() []string {
+	tm.Print(tm.Bold("GoLive needs to submit a cache invalidation request when it deploys your files."))
+	tm.Flush()
+	invalidationPaths := ""
+	survey.AskOne(&survey.Input{
+		Message: "Please provide a list of files (comma separated) that GoLive needs to look for in order to invalidate",
+	}, &invalidationPaths, survey.Required)
+
+	return util.SplitComma(invalidationPaths);
 }
 
 func askDomainNames(envs []*golive.Env) {
