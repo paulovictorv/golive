@@ -5,6 +5,8 @@ import (
 	"os"
 	"log"
 	"errors"
+	"github.com/paulovictorv/golive/app/infrastructure"
+	"fmt"
 )
 
 type Env struct {
@@ -26,18 +28,24 @@ func check(err error) {
 	}
 }
 
-func CreateEnvs(envsNames []string) []*Env {
+func CreateEnvs(appName string, envsNames []string) []*Env {
 	var envs []*Env
 	for _, envName := range envsNames {
-		envs = append(envs, &Env{Name: envName})
+
+		env := Env{
+			Name: envName,
+			Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, envName),
+		}
+
+		envs = append(envs, &env)
 	}
 	return envs
 }
 
 func CreateApp(app App) (App, error) {
-	//for _, e := range app.Envs {
-	//	e.CdnId  = infrastructure.CreateEnv(e.Bucket)
-	//}
+	for _, e := range app.Envs {
+		e.CdnId = infrastructure.CreateEnv(e.Bucket, e.Domain)
+	}
 
 	_, e := saveFile(&app)
 

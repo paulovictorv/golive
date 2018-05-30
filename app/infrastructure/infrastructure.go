@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/briandowns/spinner"
 )
 
 var sess, _ = session.NewSession(&aws.Config{
@@ -82,9 +83,25 @@ func InvalidateFiles(id string, files []*string) (string, error) {
 	return *output.Invalidation.Id, nil
 }
 
-func CreateEnv(bucketName string) string {
+func CreateEnv(bucketName, domainName string) string {
+	s := spinner.New(spinner.CharSets[26], 100 * time.Millisecond)
+
+	s.Prefix = "Creating Bucket"
+	s.Start()
 	createBucket(bucketName)
-	cdnId := createCdn(bucketName)
+	s.FinalMSG = "Done!"
+	s.Stop()
+
+	fmt.Println()
+
+	s.Prefix = "Creating Cloudfront Distribution"
+	s.Start()
+	cdnId := createCdn(bucketName, domainName)
+	s.FinalMSG = "Done!"
+	s.Stop()
+
+	fmt.Println()
+
 	return cdnId
 }
 
@@ -108,12 +125,16 @@ func createBucket(bucketName string) {
 	parseAwsError(policyError)
 }
 
-func createCdn(bucketName string) string {
+func createCdn(bucketName, domainName string) string {
 	itoa := strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond), 10);
 
 	output, cdnError := front.CreateDistribution(&cloudfront.CreateDistributionInput{
 		DistributionConfig: &cloudfront.DistributionConfig{
 			Enabled: aws.Bool(true),
+			Aliases: &cloudfront.Aliases{
+				Items: aws.StringSlice([]string {domainName}),
+				Quantity: aws.Int64(1),
+			},
 			DefaultRootObject: aws.String("index.html"),
 			DefaultCacheBehavior: &cloudfront.DefaultCacheBehavior{
 				ForwardedValues: &cloudfront.ForwardedValues{

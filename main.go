@@ -30,7 +30,7 @@ func main() {
 					envs = askNewEnvs()
 				}
 
-				initEnvs := golive.CreateEnvs(envs)
+				initEnvs := golive.CreateEnvs(appName, envs)
 
 				askDomainNames(initEnvs)
 				paths := askInvalidationPaths()
@@ -59,7 +59,7 @@ func main() {
 }
 
 func askInvalidationPaths() []string {
-	tm.Print(tm.Bold("GoLive needs to submit a cache invalidation request when it deploys your files."))
+	tm.Print(tm.Bold("GoLive needs to submit a cache invalidation request when it deploys your files"))
 	tm.Flush()
 	invalidationPaths := ""
 	survey.AskOne(&survey.Input{
