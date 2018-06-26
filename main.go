@@ -35,9 +35,12 @@ func main() {
 				askDomainNames(initEnvs)
 				paths := askInvalidationPaths()
 
+				destinationFolder := askDestinationFolder()
+
 				goliveApp := golive.App{
 					Name:              appName,
 					InvalidationPaths: paths,
+					DestinationFolder: destinationFolder,
 					Envs:              initEnvs,
 				}
 
@@ -58,6 +61,16 @@ func main() {
 	app.Run(os.Args)
 }
 
+func askDestinationFolder() string {
+	destinationFolder := "/"
+	survey.AskOne(&survey.Input{
+		Message: "To which folder should GoLive upload your files?",
+		Default: "/",
+	}, &destinationFolder, survey.Required)
+
+	return destinationFolder;
+}
+
 func askInvalidationPaths() []string {
 	tm.Print(tm.Bold("GoLive needs to submit a cache invalidation request when it deploys your files"))
 	tm.Flush()
@@ -73,7 +86,6 @@ func askDomainNames(envs []*golive.Env) {
 	tm.Println(tm.Bold(tm.Color("Almost there!", tm.BLUE)))
 	tm.Print(tm.Bold("Now, for each environment you will need to provide a domain name."))
 	tm.Flush()
-
 
 	for _, env := range envs {
 		domainName := ""
