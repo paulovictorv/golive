@@ -79,6 +79,7 @@ func DeployApp(envName string) {
 	}
 
 	infrastructure.UploadDir(app.OriginFolder, env.Bucket)
+	infrastructure.InvalidateFiles(env.CdnId, app.InvalidationPaths)
 }
 
 func pickEnv(app *App, envName string) (*Env, error) {

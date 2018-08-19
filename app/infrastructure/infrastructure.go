@@ -64,7 +64,7 @@ func UploadDir(rootPath string, bucketName string) {
 	uploader.UploadWithIterator(aws.BackgroundContext(), &iterator)
 }
 
-func InvalidateFiles(id string, files []*string) (string, error) {
+func InvalidateFiles(id string, files []string) (string, error) {
 	itoa := strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond), 10);
 
 	output, e := front.CreateInvalidation(&cloudfront.CreateInvalidationInput{
@@ -73,7 +73,7 @@ func InvalidateFiles(id string, files []*string) (string, error) {
 			CallerReference: &itoa,
 			Paths: &cloudfront.Paths{
 				Quantity: aws.Int64(int64(len(files))),
-				Items:    files,
+				Items:    aws.StringSlice(files),
 			},
 		},
 	})
