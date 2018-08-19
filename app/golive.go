@@ -7,6 +7,8 @@ import (
 	"errors"
 	"github.com/paulovictorv/golive/app/infrastructure"
 	"fmt"
+	"io/ioutil"
+	"strings"
 )
 
 type Env struct {
@@ -57,6 +59,36 @@ func CreateApp(app App) (App, error) {
 		return app, nil
 	}
 
+}
+
+func DeployApp(envName string) {
+	bytes, e := ioutil.ReadFile(".golive.yml")
+
+	if e != nil {
+		panic(".golive.yml file not found")
+	}
+
+	app := &App{}
+
+	yaml.Unmarshal(bytes, app)
+
+	env, err := pickEnv(app, envName)
+
+	if err != nil {
+		panic(err)
+	}
+
+	infrastructure.UploadDir(app.OriginFolder, env.Bucket)
+}
+
+func pickEnv(app *App, envName string) (*Env, error) {
+	for _, env := range app.Envs {
+		if strings.Compare(envName, env.Name) == 0 {
+			return env, nil
+		}
+	}
+
+	return nil, errors.New("Supplied name does not match to any env")
 }
 
 func saveFile(app *App) (int, error) {

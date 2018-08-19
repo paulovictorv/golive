@@ -15,16 +15,16 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name: "generate",
+			Name:    "generate",
 			Aliases: []string{"g"},
 			Action: func(c *cli.Context) error {
 				tm.Println(tm.Bold("Ok! Let's get it started, shall we?"))
 				tm.Flush()
 
 				appName := ""
-				survey.AskOne(&survey.Input{Message:"What's the name of your app?"}, &appName, survey.Required)
+				survey.AskOne(&survey.Input{Message: "What's the name of your app?"}, &appName, survey.Required)
 
-				envs := []string {"production", "staging"}
+				envs := []string{"production", "staging"}
 
 				if askChangeEnvs() {
 					envs = askNewEnvs()
@@ -41,7 +41,7 @@ func main() {
 				goliveApp := golive.App{
 					Name:              appName,
 					InvalidationPaths: paths,
-					OriginFolder: originFolder,
+					OriginFolder:      originFolder,
 					DestinationFolder: destinationFolder,
 					Envs:              initEnvs,
 				}
@@ -52,9 +52,11 @@ func main() {
 			},
 		},
 		{
-			Name: "deploy",
+			Name:    "deploy",
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
+				env := c.Args().First()
+				golive.DeployApp(env);
 				return nil
 			},
 		},
