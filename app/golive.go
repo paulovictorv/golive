@@ -19,6 +19,7 @@ type Env struct {
 type App struct {
 	Name string `yaml:"name"`
 	Envs []*Env `yaml:"envs"`
+	OriginFolder string `yaml:"originFolder"`
 	DestinationFolder string `yaml:"destinationFolder"`
 	InvalidationPaths []string `yaml:"invalidationPaths"`
 }

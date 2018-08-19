@@ -36,10 +36,12 @@ func main() {
 				paths := askInvalidationPaths()
 
 				destinationFolder := askDestinationFolder()
+				originFolder := askOriginFolder()
 
 				goliveApp := golive.App{
 					Name:              appName,
 					InvalidationPaths: paths,
+					OriginFolder: originFolder,
 					DestinationFolder: destinationFolder,
 					Envs:              initEnvs,
 				}
@@ -59,6 +61,16 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+func askOriginFolder() string {
+	originFolder := ""
+	survey.AskOne(&survey.Input{
+		Message: "From which folder should GoLive upload your files?",
+		Default: "/dist",
+	}, &originFolder, survey.Required)
+
+	return originFolder;
 }
 
 func askDestinationFolder() string {
