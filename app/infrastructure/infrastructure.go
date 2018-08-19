@@ -14,6 +14,7 @@ import (
 	"strings"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/briandowns/spinner"
+	"mime"
 )
 
 var sess, _ = session.NewSession(&aws.Config{
@@ -39,6 +40,7 @@ func UploadDir(rootPath string, bucketName string) {
 				Object: &s3manager.UploadInput{
 					Bucket: aws.String(bucketName),
 					Key:    aws.String(key),
+					ContentType: aws.String(mime.TypeByExtension(filepath.Ext(key))),
 					Body:   body,
 				},
 				After: func() error {
