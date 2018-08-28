@@ -1,13 +1,13 @@
 package golive
 
 import (
-	"gopkg.in/yaml.v2"
-	"os"
-	"log"
 	"errors"
-	"github.com/paulovictorv/golive/app/infrastructure"
 	"fmt"
+	"github.com/paulovictorv/golive/app/infrastructure"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
@@ -19,10 +19,10 @@ type Env struct {
 }
 
 type App struct {
-	Name string `yaml:"name"`
-	Envs []*Env `yaml:"envs"`
-	OriginFolder string `yaml:"originFolder"`
-	DestinationFolder string `yaml:"destinationFolder"`
+	Name              string   `yaml:"name"`
+	Envs              []*Env   `yaml:"envs"`
+	OriginFolder      string   `yaml:"originFolder"`
+	DestinationFolder string   `yaml:"destinationFolder"`
 	InvalidationPaths []string `yaml:"invalidationPaths"`
 }
 
@@ -37,7 +37,7 @@ func CreateEnvs(appName string, envsNames []string) []*Env {
 	for _, envName := range envsNames {
 
 		env := Env{
-			Name: envName,
+			Name:   envName,
 			Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, envName),
 		}
 
@@ -79,7 +79,12 @@ func DeployApp(envName string) {
 	}
 
 	infrastructure.UploadDir(app.OriginFolder, env.Bucket)
-	infrastructure.InvalidateFiles(env.CdnId, app.InvalidationPaths)
+	_, invErr := infrastructure.InvalidateFiles(env.CdnId, app.InvalidationPaths)
+
+	if invErr != nil {
+		panic(invErr)
+	}
+
 }
 
 func pickEnv(app *App, envName string) (*Env, error) {

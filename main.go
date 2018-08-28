@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	tm "github.com/buger/goterm"
+	"github.com/paulovictorv/golive/app"
+	"github.com/paulovictorv/golive/app/util"
 	"github.com/urfave/cli"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"os"
-	"github.com/paulovictorv/golive/app"
-	tm "github.com/buger/goterm"
-	"github.com/paulovictorv/golive/app/util"
 )
 
 func main() {
@@ -56,7 +56,8 @@ func main() {
 			Aliases: []string{"d"},
 			Action: func(c *cli.Context) error {
 				env := c.Args().First()
-				golive.DeployApp(env);
+				fmt.Println(env)
+				golive.DeployApp(env)
 				return nil
 			},
 		},
@@ -72,7 +73,7 @@ func askOriginFolder() string {
 		Default: "/dist",
 	}, &originFolder, survey.Required)
 
-	return originFolder;
+	return originFolder
 }
 
 func askDestinationFolder() string {
@@ -82,7 +83,7 @@ func askDestinationFolder() string {
 		Default: "/",
 	}, &destinationFolder, survey.Required)
 
-	return destinationFolder;
+	return destinationFolder
 }
 
 func askInvalidationPaths() []string {
@@ -93,7 +94,7 @@ func askInvalidationPaths() []string {
 		Message: "Please provide a list of files (comma separated) that GoLive needs to look for in order to invalidate",
 	}, &invalidationPaths, survey.Required)
 
-	return util.SplitComma(invalidationPaths);
+	return util.SplitComma(invalidationPaths)
 }
 
 func askDomainNames(envs []*golive.Env) {
