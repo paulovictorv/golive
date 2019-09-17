@@ -3,12 +3,12 @@ package golive
 import (
 	"errors"
 	"fmt"
-	"github.com/paulovictorv/golive/app/infrastructure"
+	"goclip.com.br/golive/app/infrastructure"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Env struct {
@@ -26,39 +26,72 @@ type App struct {
 	InvalidationPaths []string `yaml:"invalidationPaths"`
 }
 
-func check(err error) {
+func InitApp(appName string) error {
+	app := App{
+		Name: appName,
+		Envs: []*Env{
+			{
+				Name:   "production",
+				Domain: "",
+				CdnId:  "",
+				Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, "production"),
+			},
+			{
+				Name:   "staging",
+				Domain: "",
+				CdnId:  "",
+				Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, "staging"),
+			},
+		},
+		OriginFolder:      "dist/",
+		DestinationFolder: "/",
+		InvalidationPaths: []string{"/index.html"},
+	}
+
+	if err := saveFile(&app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ProvisionApp(filePath string) error {
+	bytes, err := ioutil.ReadFile(filePath)
+
 	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-}
-
-func CreateEnvs(appName string, envsNames []string) []*Env {
-	var envs []*Env
-	for _, envName := range envsNames {
-
-		env := Env{
-			Name:   envName,
-			Bucket: fmt.Sprintf("%s-%d-%s", appName, 1, envName),
-		}
-
-		envs = append(envs, &env)
-	}
-	return envs
-}
-
-func CreateApp(app App) (App, error) {
-	for _, e := range app.Envs {
-		e.CdnId = infrastructure.CreateEnv(e.Bucket, e.Domain)
+		return err
 	}
 
-	_, e := saveFile(&app)
+	app := &App{}
 
-	if e != nil {
-		return App{}, e
-	} else {
-		return app, nil
+	if err := yaml.Unmarshal(bytes, app); err != nil {
+		return err
 	}
 
+	var waitGroup sync.WaitGroup
+
+	for _, env := range app.Envs {
+		progress := make(chan string)
+		complete := make(chan int)
+
+		waitGroup.Add(1)
+
+		go infrastructure.CreateEnv(env.Bucket, env.Domain, progress, complete)
+		go func() {
+			for {
+				select {
+				case val := <-progress:
+					fmt.Printf(val)
+				case <-complete:
+					waitGroup.Done()
+					break
+				}
+			}
+		}()
+	}
+
+	waitGroup.Wait()
+	return nil
 }
 
 func DeployApp(envName string) {
@@ -70,7 +103,9 @@ func DeployApp(envName string) {
 
 	app := &App{}
 
-	yaml.Unmarshal(bytes, app)
+	if err := yaml.Unmarshal(bytes, app); err != nil {
+		return
+	}
 
 	env, err := pickEnv(app, envName)
 
@@ -97,20 +132,24 @@ func pickEnv(app *App, envName string) (*Env, error) {
 	return nil, errors.New("Supplied name does not match to any env")
 }
 
-func saveFile(app *App) (int, error) {
+func saveFile(app *App) error {
 	out, err := yaml.Marshal(app)
-	check(err)
 
-	file, e := os.Create(".golive.yml")
-	check(e)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(".golive.yml")
+
+	if err != nil {
+		return err
+	}
 
 	defer file.Close()
 
-	n, e := file.Write(out)
-
-	if n > 0 {
-		return n, nil
+	if _, err := file.Write(out); err != nil {
+		return err
 	} else {
-		return -1, errors.New("error while creating app")
+		return nil
 	}
 }
