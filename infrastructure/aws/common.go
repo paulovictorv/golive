@@ -1,35 +1,20 @@
-package infrastructure
+package aws
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"time"
 )
 
 var sess, _ = session.NewSession(&aws.Config{
-	Region: aws.String("us-west-2")})
+	Region: aws.String("us-east-1")})
 
 var s3Client = s3.New(sess)
 var front = cloudfront.New(sess)
-
-func CreateEnv(bucketName, domainName string, status chan string, complete chan int) string {
-	status <- "BUCKET_START"
-	//createBucket(bucketName)
-	time.Sleep(1000)
-	status <- "BUCKET_COMPLETE"
-
-	status <- "CDN_START"
-	//cdnId := createCdn(bucketName, domainName)
-	time.Sleep(1000)
-	status <- "CDN_COMPLETE"
-
-	complete <- 1
-
-	return "cdnId"
-}
+var route53Client = route53.New(sess)
 
 func parseAwsError(err error) string {
 	if err != nil {

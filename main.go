@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"goclip.com.br/golive/app/infrastructure"
+	"goclip.com.br/golive/infrastructure"
 	"sync"
 )
 
