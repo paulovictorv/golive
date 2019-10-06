@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-func createCdn(bucketName, domainName string) string {
+func createCdn(bucketName, domainName, acmArn string, autoEnable bool) (string, error) {
 	itoa := strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 
 	output, cdnError := front.CreateDistribution(&cloudfront.CreateDistributionInput{
@@ -41,7 +42,24 @@ func createCdn(bucketName, domainName string) string {
 				},
 			},
 			DefaultRootObject: aws.String("index.html"),
-			Enabled:           aws.Bool(true),
+			CustomErrorResponses: &cloudfront.CustomErrorResponses{
+				Items: []*cloudfront.CustomErrorResponse{
+					{
+						ErrorCachingMinTTL: aws.Int64(0),
+						ErrorCode:          aws.Int64(403),
+						ResponseCode:       aws.String("200"),
+						ResponsePagePath:   aws.String("/index.html"),
+					},
+					{
+						ErrorCachingMinTTL: aws.Int64(0),
+						ErrorCode:          aws.Int64(404),
+						ResponseCode:       aws.String("200"),
+						ResponsePagePath:   aws.String("/index.html"),
+					},
+				},
+				Quantity: aws.Int64(2),
+			},
+			Enabled: aws.Bool(autoEnable),
 			Origins: &cloudfront.Origins{
 				Items: []*cloudfront.Origin{
 					{
@@ -56,16 +74,16 @@ func createCdn(bucketName, domainName string) string {
 				Quantity: aws.Int64(1),
 			},
 			ViewerCertificate: &cloudfront.ViewerCertificate{
-				ACMCertificateArn:            nil,
-				CloudFrontDefaultCertificate: nil,
-				IAMCertificateId:             nil,
-				MinimumProtocolVersion:       aws.String("TLSv1.1_2016"),
-				SSLSupportMethod:             aws.String("sni-only"),
+				ACMCertificateArn:      aws.String(acmArn),
+				MinimumProtocolVersion: aws.String("TLSv1.1_2016"),
+				SSLSupportMethod:       aws.String("sni-only"),
 			},
 		},
 	})
 
-	parseAwsError(cdnError)
+	if cdnError != nil {
+		return "", errors.New(parseAwsError(cdnError))
+	}
 
-	return *output.Distribution.Id
+	return *output.Distribution.Id, nil
 }
