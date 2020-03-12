@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"goclip.com.br/golive/infrastructure/aws"
 	"reflect"
 	"testing"
 )
@@ -17,7 +18,7 @@ func TestCreateInfra(t *testing.T) {
 		{
 			"test get aws provider",
 			args{provider: AWS},
-			AmazonInfrastructure{},
+			aws.AmazonInfrastructure{},
 		},
 	}
 	for _, tt := range tests {

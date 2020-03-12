@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"goclip.com.br/golive/app/env"
+	"goclip.com.br/golive/infrastructure/aws"
 )
 
 type Infrastructure interface {
@@ -12,13 +13,14 @@ type Infrastructure interface {
 type Provider int
 
 const (
-	AWS Provider = 0
+	AWS  Provider = 0
+	STUB Provider = 1
 )
 
 func CreateInfra(provider Provider) Infrastructure {
 	switch provider {
 	case AWS:
-		return AmazonInfrastructure{}
+		return aws.AmazonInfrastructure{}
 	default:
 		return nil
 	}

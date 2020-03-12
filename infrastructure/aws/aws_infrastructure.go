@@ -1,4 +1,4 @@
-package infrastructure
+package aws
 
 import (
 	"goclip.com.br/golive/app/env"
@@ -24,14 +24,20 @@ func (i AmazonInfrastructure) ProvisionEnv(env *env.Env, status chan string, com
 	// 4.2 if it's not, register CNAME register
 	//env is provisioned
 
+	status <- "CHECKING_CERTIFICATE_START"
+	certArn, error := findCertificate(env.Domain)
+
+	if error != nil {
+		status <- "CHECKING_CERTIFICATE_ERROR"
+		complete <- 1
+	}
+
 	status <- "BUCKET_START"
-	//createBucket(bucketName)
-	time.Sleep(1000)
+	createBucket(env.Bucket)
 	status <- "BUCKET_COMPLETE"
 
 	status <- "CDN_START"
-	//cdnId := createCdn(bucketName, domainName)
-	time.Sleep(1000)
+	createCdn(env.Bucket, env.Domain)
 	status <- "CDN_COMPLETE"
 
 	complete <- 1

@@ -1,12 +1,11 @@
 package golive
 
 import (
-	"fmt"
+	"goclip.com.br/golive/infrastructure"
 	"testing"
 )
 
 func TestProvisionApp(t *testing.T) {
-	error := ProvisionApp(".golive.yml")
-
-	fmt.Println(error)
+	app := createApp("stub")
+	app.Provider = infrastructure.STUB
 }
