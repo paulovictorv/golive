@@ -8,4 +8,6 @@ import (
 func TestProvisionApp(t *testing.T) {
 	app := createApp("stub")
 	app.Provider = infrastructure.STUB
+
+	ProvisionApp(app)
 }

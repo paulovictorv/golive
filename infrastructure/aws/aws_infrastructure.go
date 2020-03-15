@@ -2,7 +2,6 @@ package aws
 
 import (
 	"goclip.com.br/golive/app/env"
-	"time"
 )
 
 type AmazonInfrastructure struct {
@@ -14,35 +13,49 @@ func (i AmazonInfrastructure) ProvisionEnv(env *env.Env, status chan string, com
 	//1.2 if it doesn't, request a new certificate. Use DNS validation by default. [X]
 	//1.2.1 if domain has a hosted zone on Route53, register DNS entries and wait for provisioning [X]
 	//1.2.2 if not, print out DNS entries before continuing
-	//2. create a bucket (PUBLIC_READ, hosting static website). Store the bucket website address
+	//2. create a bucket (PUBLIC_READ, hosting static website). Store the bucket website address [x]
 	//3. create a CDN
 	// 3.1 point origin to the bucket website hosting URL
 	// 3.2 use certificate obtained from step 1
-	// 3.3 setup default error pages for 403, 401 and 404
+	// 3.3 setup default certError pages for 403, 401 and 404
 	//4. prepare Route53 configuration
 	// 4.1 if it's a root domain, register as alias
 	// 4.2 if it's not, register CNAME register
 	//env is provisioned
 
 	status <- "CHECKING_CERTIFICATE_START"
-	certArn, error := findCertificate(env.Domain)
+	certArn, certError := findCertificate(env.Domain)
 
-	if error != nil {
+	if certError != nil {
 		status <- "CHECKING_CERTIFICATE_ERROR"
 		complete <- 1
+	} else {
+		status <- "CHECKING_CERTIFICATE_COMPLETE"
 	}
 
 	status <- "BUCKET_START"
-	createBucket(env.Bucket)
-	status <- "BUCKET_COMPLETE"
+	bucketAddress, bucketError := createBucket(env.Bucket)
+
+	if bucketError != nil {
+		status <- "BUCKET_ERROR"
+		complete <- 1
+	} else {
+		env.Bucket = bucketAddress
+		status <- "BUCKET_COMPLETE"
+	}
 
 	status <- "CDN_START"
-	createCdn(env.Bucket, env.Domain)
+	cdnId, cdnErr := createCdn(env.Bucket, env.Domain, certArn, true)
+
+	if cdnErr != nil {
+		status <- "CDN_ERROR"
+		complete <- 1
+	} else {
+		env.CdnId = cdnId
+	}
+
 	status <- "CDN_COMPLETE"
-
 	complete <- 1
-
-	env.CdnId = ""
 }
 
 func (i AmazonInfrastructure) DeployEnv(env env.Env) {

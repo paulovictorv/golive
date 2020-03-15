@@ -71,7 +71,7 @@ func LoadApp(filePath string) (App, error) {
 func ProvisionApp(app App) error {
 	var waitGroup sync.WaitGroup
 
-	for _, env := range app.Envs {
+	for _, appEnv := range app.Envs {
 		progress := make(chan string)
 		complete := make(chan int)
 
@@ -79,7 +79,7 @@ func ProvisionApp(app App) error {
 
 		infra := infrastructure.CreateInfra(app.Provider)
 
-		go infra.ProvisionEnv(env, progress, complete)
+		go infra.ProvisionEnv(appEnv, progress, complete)
 		go func() {
 			for {
 				select {

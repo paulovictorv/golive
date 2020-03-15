@@ -11,7 +11,7 @@ type StubInfrastructure struct {
 func (s StubInfrastructure) ProvisionEnv(env *env.Env, status chan string, complete chan int) {
 	status <- "BUCKET_START"
 	//createBucket(bucketName)
-	time.Sleep(1000)
+	time.Sleep(10 * time.Second)
 	status <- "BUCKET_COMPLETE"
 
 	status <- "CDN_START"
@@ -22,7 +22,6 @@ func (s StubInfrastructure) ProvisionEnv(env *env.Env, status chan string, compl
 	complete <- 1
 
 	env.CdnId = ""
-	panic("implement me")
 }
 
 func (s StubInfrastructure) DeployEnv(env env.Env) {

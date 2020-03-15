@@ -22,6 +22,6 @@ func CreateInfra(provider Provider) Infrastructure {
 	case AWS:
 		return aws.AmazonInfrastructure{}
 	default:
-		return nil
+		return StubInfrastructure{}
 	}
 }
